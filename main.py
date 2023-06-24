@@ -4,13 +4,11 @@ import openai
 import os
 from config.constants import *
 from langchain import OpenAI, ConversationChain, LLMChain, PromptTemplate
-from langchain.memory import ConversationBufferMemory
+from langchain.memory import ConversationBufferWindowMemory
 from dotenv import load_dotenv
 
 
 load_dotenv()
-
-#llm(s)
 
 
 # Setup OpenAI API credentials & llm
@@ -18,14 +16,14 @@ openai.api_key = os.getenv(OPEN_API_ENV_NAME)
 llm = OpenAI(temperature=0)
 
 #store chat memory
-chat_memory = ConversationBufferMemory(input_key='question', memory_key='chat_history')
+chat_memory = ConversationBufferWindowMemory(k=2)
 
 prompt = PromptTemplate(input_variables=["history", "input"], template=ASSISTANT_TEMPLATE)
 
 
 llm_chain = LLMChain(
-    llm,
-    prompt,
+    llm=llm,
+    prompt=prompt,
     verbose=True,
     memory=chat_memory
 )
@@ -65,9 +63,10 @@ def process_command(command):
                 speak("Ok bye!")
                 break
             else: #run agent
-                response = llm_chain.predict(command)
+                response = llm_chain.predict(input=command)
                 print(response)
                 speak(response)
+                
                 
     else:
         speak("You can wake me up by saying 'arturo'")
